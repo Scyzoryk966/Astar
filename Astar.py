@@ -53,7 +53,11 @@ def checktuple(x, y, grid, end, checklist, visitedlist):  # sprawdzamy krotki
                     break
 
 
-def main(visitedlist, checklist, grid, end):
+def main(end, start):
+    objectStart = Area(start[0], start[1], end[0], end[1], None, 0)  # obiekt pkt startowego
+    checklist = []  # lista sprawdzanych pol
+    visitedlist = [objectStart]  # lista zamknieta odwiedzonych pol
+    grid = fileread('grid.txt')  # wczytywanie mapy
     while True:
         x = visitedlist[-1].x
         y = visitedlist[-1].y
@@ -74,6 +78,15 @@ def main(visitedlist, checklist, grid, end):
             matrxidisp(grid, start, end)
             print('\033[91mERROR! NIE MOZNA ZNALEZC DROGI!')
             exit(404)
+
+    traceroute(visitedlist[-1], grid)
+    createfile('patch.txt', grid)
+    for i in visitedlist:  # wstawia 1 w odwiedzonych krotkach
+        if grid[i.x][i.y] != 3:
+            grid[i.x][i.y] = 1
+    matrxidisp(grid, start, end)
+    print('Legeda:\033[91m ściany, \033[94mznaleziona trasa, \033[92mstart, \033[95mcel.\033[0m')
+    print('Odtwiedzono', len(visitedlist), 'krotek.')
 
 
 def traceroute(last, grid):
@@ -112,20 +125,11 @@ class Area:
 
 start = [0, 0]  # punkt startowy
 end = [19, 19]  # CEL
-objectStart = Area(start[0], start[1], end[0], end[1], None, 0)  # obiekt pkt startowego
-checklist = []  # lista sprawdzanych pol
-visitedlist = [objectStart]  # lista zamknieta odwiedzonych pol
-grid = fileread('grid.txt')  # wczytywanie mapy
+
 start_time = time.time()  # liczenie czasu pracy programu
-main(visitedlist,checklist,grid,end)
+main(end, start)
 fin_time = time.time() - start_time
-
-for i in visitedlist:  # wstawia 1 w odwiedzonych krotkach
-    grid[i.x][i.y] = 1
-
-traceroute(visitedlist[-1], grid)
-matrxidisp(grid, start, end)
-print('Legeda:\033[91m ściany, \033[94mznaleziona trasa, \033[92mstart, \033[95mcel.\033[0m')
-print('Odtwiedzono', len(visitedlist), 'krotek.')
 print('Znaleziono w czasie', fin_time * 1000, 'ms.')
-createfile('patch.txt', grid)
+
+
+
