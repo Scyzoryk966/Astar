@@ -1,5 +1,4 @@
-from operator import attrgetter
-
+import time
 
 def matrxidisp(matrix, start, end, test=None):  # fun wyswietlanko z kolorkami + podświetlanie danej krotki w celach testowych
     if test is None:
@@ -33,11 +32,11 @@ def fileread(name):  # fun otwieranie pliku
 
 
 def checktuple(x, y, grid, end, checklist, visitedlist):    # sprawdzamy krotki
-    if x >= 0 and y >= 0 and x <= len(grid[0])-1 and y <= len(grid)-1 and grid[x][y] != 5:
+    if 0 <= x <= len(grid[0]) - 1 and 0 <= y <= len(grid) - 1 and grid[x][y] != 5:  # spr czy nie wychodzi poza mape
         temp = Area(x, y, end[0], end[1], visitedlist[-1])
-        if temp not in visitedlist and temp not in checklist:
+        if temp not in visitedlist and temp not in checklist:   # spr czy nie ma takiej krotki w listach zma i otw
             checklist.append(temp)
-        else:                  # to jest chyba nie potrzebne w przypadku kiedy mamy koszt=1 i poruszanie sie tylko d,l,g,p
+        else:                # to jest chyba nie potrzebne w przypadku kiedy mamy koszt=1 i poruszanie sie tylko d,l,g,p
             for i in visitedlist:
                 if i.h > temp.h:   # działa?
                     visitedlist[visitedlist.index(i)] = temp
@@ -51,7 +50,7 @@ def traceroute(last, grid):
 
 
 class Area:
-    def __init__(self, x, y, endX, endY, parent, cost=None):  # konstruktor
+    def __init__(self, x, y, endX, endY, parent, cost=None):
         if cost is None:
             cost = 1 + parent.cost
         else:
@@ -72,19 +71,19 @@ class Area:
 
     def display(self):
         print("X:", self.x, " Y:", self.y, " Heuristics:", self.h, end='')
-        if (self.parent):
+        if self.parent:
             print(" Parent:[", self.parent.x, ",", self.parent.y, "]")
         else:
             print()
 
 
-end = [19, 19]  # CEL
-start = [0, 0]  # punkt startowy
+start = [0, 0]               # punkt startowy
+end = [19, 19]               # CEL
 objectStart = Area(start[0], start[1], end[0], end[1], None, 0)  # obiekt pkt startowego
-checklist = []  # lista sprawdzanych pol
+checklist = []               # lista sprawdzanych pol
 visitedlist = [objectStart]  # lista zamknieta odwiedzonych pol
-grid = fileread('grid.txt') # wczytywanie mapy
-
+grid = fileread('grid.txt')  # wczytywanie mapy
+start_time = time.time()     #liczenie czasu pracy programu
 while True:
     x = visitedlist[-1].x
     y = visitedlist[-1].y
@@ -95,17 +94,21 @@ while True:
     checktuple(x, y + 1, grid, end, checklist, visitedlist)
 
     checklist.sort(key=lambda h: h.h, reverse=True)  # sortowanie listy otwartej po koszcie
-    if not (checklist[-1] in visitedlist):
-        checklist[-1].display()
-        visitedlist.append(checklist[-1])
-    checklist.pop()
-    if visitedlist[-1].x == end[0] and visitedlist[-1].y == end[1]:
-        break
-    else:
-        continue
+    try:
+        if not (checklist[-1] in visitedlist):
+            visitedlist.append(checklist[-1])
+        checklist.pop()
+        if visitedlist[-1].x == end[0] and visitedlist[-1].y == end[1]:
+            break
+    except:
+        print('\033[91mERROR! NIE MOZNA ZNALEZC DROGI!')
+        exit(404)
+fin_time = time.time() - start_time
 
 for i in visitedlist:   # wstawia 1 w odwiedzonych krotkach
     grid[i.x][i.y] = 1
 
 traceroute(visitedlist[-1], grid)
 matrxidisp(grid, start, end)
+print('Odtwiedzono', len(visitedlist), 'krotek.')
+print('Znaleziono w czasie', fin_time*1000, 'ms.')
